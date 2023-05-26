@@ -21,11 +21,15 @@ public class StockExchange
 
     public Dictionary<string, decimal> GetTopPerformingStocks(int topN)
     { 
-        return StockList.OrderByDescending(s => s.CurrentPrice).Take(topN).ToDictionary(s => s.Name, s => s.CurrentPrice);
+        return StockList.OrderByDescending(s => s.CurrentPrice)
+                        .Take(topN)
+                        .ToDictionary(s => s.Name, s => s.CurrentPrice);
     }
 
     public Dictionary<string, decimal> GetLeastPerformingStocks(int topN)
     {
-		return StockList.OrderBy(s => s.CurrentPrice).Take(topN).ToDictionary(s => s.Name, s => s.CurrentPrice);
+		return StockList.OrderBy(s => s.CurrentPrice)
+                        .Take(topN)
+                        .ToDictionary(s => s.Name, s => s.CurrentPrice);
 	}
 }

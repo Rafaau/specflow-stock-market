@@ -71,6 +71,42 @@ public class InvestorSteps
 		stock.CurrentPrice = price;
 	}
 
+	[Given(@"The investor has a balance of (\d+)")]
+	public void GivenTheInvestorHasABalance(decimal balance)
+	{
+		var investor = new Investor { Balance = balance };
+		_scenarioContext.Add("investor", investor);
+	}
+
+	[When(@"the investor getting holdings")]
+	public void WhenTheInvestorGettingHoldings()
+	{
+		var investor = _scenarioContext.Get<Investor>("investor");
+		var holdings = investor.GetInvestorHoldings();
+		_scenarioContext.Add("holdings", holdings);
+	}
+
+	[When(@"the investor deposits (\d+)")]
+	public void WhenTheInvestorDeposits(decimal amount)
+	{
+		var investor = _scenarioContext.Get<Investor>("investor");
+		investor.DepositFunds(amount);
+	}
+
+	[When(@"the investor withdraws (\d+)")]
+	public void WhenTheInvestorWithdraws(decimal amount)
+	{
+		try
+		{
+			var investor = _scenarioContext.Get<Investor>("investor");
+			investor.WithdrawFunds(amount);
+		}
+		catch (Exception ex)
+		{
+			_scenarioContext.Add("exception", ex);
+		}
+	}
+
 	[When(@"the investor evaluates the portfolio")]
 	public void WhenTheInvestorEvaluatesThePortfolio()
 	{
@@ -82,18 +118,46 @@ public class InvestorSteps
 	[When(@"the investor makes the investment")]
 	public void WhenTheInvestorMakesTheInvestment()
 	{
-		var investor = _scenarioContext.Get<Investor>("investor");
-		var stock = _scenarioContext.Get<Stock>("stock");
-		var quantity = _scenarioContext.Get<int>("quantity");
-		investor.MakeInvestment(stock, quantity);
+		try
+		{
+			var investor = _scenarioContext.Get<Investor>("investor");
+			var stock = _scenarioContext.Get<Stock>("stock");
+			var quantity = _scenarioContext.Get<int>("quantity");
+			investor.MakeInvestment(stock, quantity);
+		}
+		catch (Exception ex)
+		{
+			_scenarioContext.Add("exception", ex);
+		}
 	}
 
 	[When(@"the investor sells (\d+) stocks of 'XYZ'")]
 	public void WhenTheInvestorSellsStocks(int quantity)
 	{
-		var investor = _scenarioContext.Get<Investor>("investor");
-		var stock = _scenarioContext.Get<Stock>("stock");
-		investor.SellInvestment(stock, quantity);
+		try
+		{
+			var investor = _scenarioContext.Get<Investor>("investor");
+			var stock = _scenarioContext.Get<Stock>("stock");
+			investor.SellInvestment(stock, quantity);
+		}
+		catch (Exception ex)
+		{
+			_scenarioContext.Add("exception", ex);
+		}
+	}
+
+	[Then(@"the investor holdings should be")]
+	public void ThenTheInvestorHoldingsShouldBe(Table table)
+	{
+		var holdings = _scenarioContext.Get<Dictionary<Stock, int>>("holdings");
+		foreach (var row in table.Rows)
+		{
+			var stockName = row["Stock"];
+			var quantity = int.Parse(row["Quantity"]);
+			var stock = _stockExchange.StockList.FirstOrDefault(s => s.Name == stockName);
+
+			holdings[stock!].Should().Be(quantity);
+		}
 	}
 
 	[Then(@"the net worth should be (\d+)")]
@@ -116,5 +180,12 @@ public class InvestorSteps
 	{
 		var investor = _scenarioContext.Get<Investor>("investor");
 		balance.Should().Be(investor.Balance);
+	}
+
+	[Then(@"the error '(.*)' should be raised")]
+	public void ThenTheErrorShouldBeRaised(string errorMessage)
+	{
+		var exception = _scenarioContext.Get<Exception>("exception");
+		exception.Message.Should().Be(errorMessage);
 	}
 }
